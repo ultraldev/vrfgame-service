@@ -5,6 +5,7 @@ import * as schema from '@/db/schema'
 import { currency } from '@/lib/currency'
 import { formatAmount } from '@/lib/money'
 
+import { RewardList } from './schema'
 import {
   computePool,
   currentPeriodStart,
@@ -206,4 +207,65 @@ export async function mine(
             active.decimals,
           ),
   }
+}
+
+export async function rewards(
+  db: Db,
+  userId: string,
+  query: { limit: number; period?: RankingPeriod },
+) {
+  const rows = await db
+    .select({
+      amount: schema.rankingReward.amount,
+      bucketDate: schema.rankingReward.bucketDate,
+      createdAt: schema.rankingReward.createdAt,
+      currency: schema.rankingReward.currency,
+      decimals: schema.currency.decimals,
+      heldReason: schema.rankingReward.heldReason,
+      percentageBps: schema.rankingReward.percentageBps,
+      periodType: schema.rankingReward.periodType,
+      poolAmount: schema.rankingReward.poolAmount,
+      rank: schema.rankingReward.rank,
+      resolvedAt: schema.rankingReward.resolvedAt,
+      status: schema.rankingReward.status,
+      userId: schema.rankingReward.userId,
+      wagered: schema.rankingReward.wagered,
+    })
+    .from(schema.rankingReward)
+    .innerJoin(
+      schema.currency,
+      eq(schema.currency.code, schema.rankingReward.currency),
+    )
+    .where(
+      and(
+        eq(schema.rankingReward.userId, userId),
+        query.period
+          ? eq(schema.rankingReward.periodType, query.period)
+          : undefined,
+      ),
+    )
+    .orderBy(
+      desc(schema.rankingReward.createdAt),
+      desc(schema.rankingReward.bucketDate),
+      asc(schema.rankingReward.rank),
+    )
+    .limit(query.limit)
+
+  return RewardList.parse({
+    items: rows.map((row) => ({
+      amount: formatAmount(row.amount, row.decimals),
+      bucketDate: row.bucketDate,
+      createdAt: row.createdAt.toISOString(),
+      currency: row.currency,
+      heldReason: row.heldReason,
+      percentageBps: row.percentageBps,
+      periodType: row.periodType,
+      poolAmount: formatAmount(row.poolAmount, row.decimals),
+      rank: row.rank,
+      resolvedAt: row.resolvedAt?.toISOString() ?? null,
+      status: row.status,
+      userId: row.userId,
+      wagered: formatAmount(row.wagered, row.decimals),
+    })),
+  })
 }

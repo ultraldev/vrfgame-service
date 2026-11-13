@@ -1,0 +1,1 @@
+ALTER TABLE "game_bet" ALTER COLUMN "seed_id" DROP NOT NULL;

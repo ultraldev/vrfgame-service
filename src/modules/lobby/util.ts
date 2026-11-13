@@ -4,7 +4,6 @@ const TAGS = {
   hot: 40,
   new: 25,
 } as const
-const COVERS = ['thumbnail', 'icon', 'banner'] as const
 
 interface Tags {
   featured?: boolean
@@ -110,26 +109,6 @@ export function ordered<T extends Candidate>(items: T[]) {
     })
     .slice(0, LIMIT)
     .map((row) => row.item)
-}
-
-export function cover(
-  assets: {
-    locale: string
-    sortOrder?: number | null
-    type: string
-    url: string
-  }[],
-) {
-  for (const type of COVERS) {
-    const matches = assets
-      .filter((asset) => asset.type === type)
-      .toSorted((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-    const match = matches.find((asset) => asset.locale === 'en') ?? matches[0]
-    if (match) {
-      return match.url
-    }
-  }
-  return null
 }
 
 export function multiplier(centi: number) {

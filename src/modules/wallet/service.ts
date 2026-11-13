@@ -13,12 +13,14 @@ import {
   or,
 } from 'drizzle-orm'
 import type { SQL } from 'drizzle-orm'
+import type Redis from 'ioredis'
 
 import type { Db } from '@/db'
 import * as schema from '@/db/schema'
 import { currency } from '@/lib/currency'
 import { decodeCursor, encodeCursor } from '@/lib/cursor'
 import { formatAmount } from '@/lib/money'
+import { REALTIME_CHANNEL, SOCKET_EVENTS } from '@/lib/socket-events'
 
 import type { TransactionQuery } from './schema'
 import {
@@ -42,7 +44,7 @@ function meta(active: Currency) {
   }
 }
 
-async function ensure(db: Db, userId: string, code: string) {
+export async function ensureWallet(db: Db, userId: string, code: string) {
   const existing = await db.query.wallet.findFirst({
     where: and(
       eq(schema.wallet.userId, userId),
@@ -84,13 +86,46 @@ async function ensure(db: Db, userId: string, code: string) {
 
 export async function balance(db: Db, userId: string, requested?: string) {
   const active = await currency(db, requested)
-  const wallet = await ensure(db, userId, active.code)
+  const wallet = await ensureWallet(db, userId, active.code)
   return {
     balance: formatAmount(wallet.balance, active.decimals),
     currency: wallet.currency,
     lockedBalance: formatAmount(wallet.lockedBalance, active.decimals),
     meta: meta(active),
   }
+}
+
+export async function balanceSnapshot(
+  db: Db,
+  userId: string,
+  requested?: string,
+) {
+  const active = await currency(db, requested)
+  const wallet = await ensureWallet(db, userId, active.code)
+  return {
+    balance: formatAmount(wallet.balance, active.decimals),
+    currency: wallet.currency,
+    lockedBalance: formatAmount(wallet.lockedBalance, active.decimals),
+    meta: meta(active),
+    seq: wallet.version,
+  }
+}
+
+export async function publishWalletBalance(
+  redis: Pick<Redis, 'publish'>,
+  db: Db,
+  userId: string,
+  requested?: string,
+) {
+  const snapshot = await balanceSnapshot(db, userId, requested)
+  await redis.publish(
+    REALTIME_CHANNEL,
+    JSON.stringify({
+      data: { ...snapshot, userId },
+      event: SOCKET_EVENTS.walletBalanceUpdate,
+      userId,
+    }),
+  )
 }
 
 export async function balances(db: Db, userId: string) {
@@ -106,7 +141,7 @@ export async function balances(db: Db, userId: string) {
     .orderBy(asc(schema.currency.code))
   const wallets = await Promise.all(
     currencies.map(async (active) => {
-      const wallet = await ensure(db, userId, active.code)
+      const wallet = await ensureWallet(db, userId, active.code)
       return {
         balance: formatAmount(wallet.balance, active.decimals),
         currency: wallet.currency,

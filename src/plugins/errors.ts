@@ -1,5 +1,6 @@
 import http from 'node:http'
 
+import { hasZodFastifySchemaValidationErrors } from '@fastify/type-provider-zod'
 import type {
   FastifyError,
   FastifyInstance,
@@ -7,7 +8,8 @@ import type {
   FastifyRequest,
 } from 'fastify'
 import fp from 'fastify-plugin'
-import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod'
+
+import { PUBLIC_ERROR_CODE_SET } from '@/lib/error-codes'
 
 const databaseErrors: Record<
   string,
@@ -85,8 +87,7 @@ function handleError(
 
   const statusCode = error.statusCode ?? 500
   const code =
-    statusCode < 500 &&
-    (error.code === 'user_banned' || error.code === 'virtual_account_expired')
+    statusCode < 500 && error.code && PUBLIC_ERROR_CODE_SET.has(error.code)
       ? error.code
       : undefined
   if (statusCode >= 500) {

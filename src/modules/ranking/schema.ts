@@ -48,3 +48,31 @@ z.globalRegistry.add(Entry, { id: 'RankingEntry' })
 z.globalRegistry.add(Champion, { id: 'RankingChampion' })
 z.globalRegistry.add(Board, { id: 'RankingBoard' })
 z.globalRegistry.add(Position, { id: 'RankingPosition' })
+
+export const RewardQuery = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  period: Period.optional(),
+})
+
+export const Reward = z.object({
+  amount: z.string(),
+  bucketDate: z.string(),
+  createdAt: z.iso.datetime(),
+  currency: z.string(),
+  heldReason: z.string().nullable(),
+  percentageBps: z.number().int(),
+  periodType: Period,
+  poolAmount: z.string(),
+  rank: z.number().int().positive(),
+  resolvedAt: z.iso.datetime().nullable(),
+  status: z.enum(['pending', 'held', 'paid', 'skipped']),
+  userId: z.string(),
+  wagered: z.string(),
+})
+
+export const RewardList = z.object({
+  items: z.array(Reward),
+})
+
+z.globalRegistry.add(Reward, { id: 'RankingReward' })
+z.globalRegistry.add(RewardList, { id: 'RankingRewardList' })

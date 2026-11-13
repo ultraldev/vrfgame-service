@@ -8,6 +8,8 @@ export default defineConfig({
   ignorePatterns: [...(core.ignorePatterns || []), 'openapi.json'],
   rules: {
     'func-style': ['error', 'declaration'],
+    'no-await-in-loop': 'allow',
     'oxc/no-barrel-file': 'allow',
+    'prefer-destructuring': 'allow',
   },
 })

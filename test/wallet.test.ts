@@ -15,17 +15,19 @@ describe('wallet transaction helpers', () => {
       adjustment: transactionType('admin_adjust'),
       bet: transactionType('dice_bet'),
       bonus: transactionType('new_user_cashback'),
+      crashRefund: transactionType('crash_refund'),
       deposit: transactionType('deposit'),
       other: transactionType('unknown_reference'),
       payout: transactionType('crash_payout'),
       purchase: transactionType('raffle_ticket_purchase'),
       refund: transactionType('withdraw_unlock'),
-      reward: transactionType('leaderboard_reward'),
+      reward: transactionType('ranking_reward'),
       withdrawal: transactionType('withdraw_lock'),
     }).toStrictEqual({
       adjustment: 'adjustment',
       bet: 'bet',
       bonus: 'bonus',
+      crashRefund: 'refund',
       deposit: 'deposit',
       other: 'other',
       payout: 'payout',
@@ -91,5 +93,19 @@ describe('wallet transaction helpers', () => {
         to: '2026-11-01T00:00:00Z',
       }),
     ).toThrow('`to` must be after `from`')
+  })
+})
+
+describe('wallet routes', () => {
+  it('guards the wagering summary endpoint', async () => {
+    const { build } = await import('@test/helper')
+    const { vi } = await import('vitest')
+    const app = await build()
+    vi.spyOn(app.auth.api, 'getSession').mockResolvedValue(null)
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/wallet/wagering?currency=USD',
+    })
+    expect(response.statusCode).toBe(401)
   })
 })

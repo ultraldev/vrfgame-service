@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "game_bet_user_game_active_idx" ON "game_bet" USING btree ("user_id","game_id") WHERE "game_bet"."status" = 'active';

@@ -4,9 +4,9 @@ import type { Db } from '@/db'
 import * as schema from '@/db/schema'
 import { currency } from '@/lib/currency'
 import { formatAmount } from '@/lib/money'
+import { gameCoverUrl } from '@/modules/game/util'
 
 import {
-  cover,
   games as rankGames,
   gift,
   multiplier,
@@ -60,7 +60,7 @@ export async function listGames(db: Db) {
       },
     })),
   ).map(({ row }) => ({
-    imageUrl: cover(row.assets),
+    imageUrl: gameCoverUrl(row.assets),
     isHot: row.isHot ?? false,
     isNew: row.isNew ?? false,
     name: row.name,

@@ -2,10 +2,14 @@ import type { FastifyInstance } from 'fastify'
 
 import { buildApp } from '@/app'
 import { loadConfig } from '@/lib/config'
+import { registerRealtime } from '@/realtime'
 
 async function start() {
   const config = loadConfig()
   const app = await buildApp({ config })
+  await app.ready()
+  await app.attachSocket()
+  registerRealtime(app)
   let shuttingDown = false
 
   async function shutdown(

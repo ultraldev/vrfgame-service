@@ -1,0 +1,7 @@
+ALTER TABLE "fiat_route" ADD CONSTRAINT "fiat_route_min_deposit_check" CHECK ("fiat_route"."min_deposit_amount" is null or "fiat_route"."min_deposit_amount" >= 0);--> statement-breakpoint
+ALTER TABLE "fiat_route" ADD CONSTRAINT "fiat_route_max_deposit_check" CHECK ("fiat_route"."max_deposit_amount" is null or "fiat_route"."max_deposit_amount" >= 0);--> statement-breakpoint
+ALTER TABLE "fiat_route" ADD CONSTRAINT "fiat_route_deposit_range_check" CHECK ("fiat_route"."min_deposit_amount" is null or "fiat_route"."max_deposit_amount" is null or "fiat_route"."min_deposit_amount" <= "fiat_route"."max_deposit_amount");--> statement-breakpoint
+ALTER TABLE "fiat_route" ADD CONSTRAINT "fiat_route_min_withdraw_check" CHECK ("fiat_route"."min_withdraw_amount" is null or "fiat_route"."min_withdraw_amount" >= 0);--> statement-breakpoint
+ALTER TABLE "fiat_route" ADD CONSTRAINT "fiat_route_max_withdraw_check" CHECK ("fiat_route"."max_withdraw_amount" is null or "fiat_route"."max_withdraw_amount" >= 0);--> statement-breakpoint
+ALTER TABLE "fiat_route" ADD CONSTRAINT "fiat_route_withdraw_range_check" CHECK ("fiat_route"."min_withdraw_amount" is null or "fiat_route"."max_withdraw_amount" is null or "fiat_route"."min_withdraw_amount" <= "fiat_route"."max_withdraw_amount");--> statement-breakpoint
+ALTER TABLE "fiat_route" ADD CONSTRAINT "fiat_route_review_withdraw_check" CHECK ("fiat_route"."review_withdraw_amount" is null or "fiat_route"."review_withdraw_amount" >= 0);

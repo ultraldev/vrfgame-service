@@ -52,7 +52,7 @@ Local PostgreSQL and Redis run through `docker compose`. PostgreSQL is exposed o
 
 - Source imports use `@/` without file extensions.
 - Test imports use `@test/` without file extensions.
-- `tsx` resolves aliases in development and tests; `tsc-alias` rewrites them for the production build.
+- `tsx` runs development and scripts; `tsdown` builds the production bundle and resolves `@/` aliases; `tsc --noEmit` handles type checking.
 - There is one root `tsconfig.json` and one build config. Do not add separate test tsconfig files.
 - `oxc/no-barrel-file` is intentionally disabled globally.
 - Barrel files are allowed. `src/db/schema/index.ts` must re-export every domain schema file and is the Drizzle schema registry.

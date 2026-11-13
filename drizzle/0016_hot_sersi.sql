@@ -1,0 +1,1 @@
+ALTER TABLE "fiat_order" ADD COLUMN "retryable" boolean DEFAULT false NOT NULL;

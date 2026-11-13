@@ -1,11 +1,11 @@
+import type { ZodTypeProvider } from '@fastify/type-provider-zod'
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify'
-import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 
 import { API_PREFIX } from '@/lib/api'
 import { Failure } from '@/lib/schemas'
 
-import { Board, Position, Query } from './schema'
-import { mine, ranking } from './service'
+import { Board, Position, Query, RewardList, RewardQuery } from './schema'
+import { mine, ranking, rewards } from './service'
 
 const PREFIX = `${API_PREFIX}/ranking`
 const failures = {
@@ -47,6 +47,20 @@ function routes(
       response: { 200: Position, ...failures },
     },
     url: `${PREFIX}/me`,
+  })
+  app.route({
+    handler: (request) => {
+      const { user } = fastify.auth.session(request)
+      return rewards(fastify.db, user.id, request.query)
+    },
+    method: 'GET',
+    preHandler: fastify.auth.required,
+    schema: {
+      operationId: 'listMyRankingRewards',
+      querystring: RewardQuery,
+      response: { 200: RewardList, ...failures },
+    },
+    url: `${PREFIX}/rewards`,
   })
   done()
 }

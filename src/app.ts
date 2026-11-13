@@ -1,9 +1,9 @@
-import Fastify from 'fastify'
-import type { FastifyServerOptions } from 'fastify'
 import {
   serializerCompiler,
   validatorCompiler,
-} from 'fastify-type-provider-zod'
+} from '@fastify/type-provider-zod'
+import Fastify from 'fastify'
+import type { FastifyServerOptions } from 'fastify'
 
 import { loadConfig } from '@/lib/config'
 import type { AppConfig } from '@/lib/config'

@@ -1,5 +1,5 @@
+import type { ZodTypeProvider } from '@fastify/type-provider-zod'
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify'
-import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 
 import { Failure, Health, Ready } from '@/lib/schemas'
 

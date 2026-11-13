@@ -12,7 +12,8 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 
-import { currency } from './wallet'
+import { user } from './auth'
+import { currency, wallet } from './wallet'
 
 export interface CrateRevisionItem {
   id: string
@@ -23,6 +24,17 @@ export interface CrateRevisionItem {
   slug: string
   sortOrder: number
   weight: number
+}
+
+export interface CaseOpenResult {
+  crateId: string
+  crateSlug: string
+  crateVersion: number
+  itemId: string
+  itemIndex: number
+  itemPayout: string
+  payoutCapped: boolean
+  revisionId: string
 }
 
 export const crate = pgTable(
@@ -95,11 +107,91 @@ export const crateRevision = pgTable(
   ],
 )
 
-export const crateRelations = relations(crate, ({ one }) => ({
+export const caseFairnessSeed = pgTable(
+  'case_fairness_seed',
+  {
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    id: text('id').primaryKey(),
+    nonce: integer('nonce').notNull().default(0),
+    revealedAt: timestamp('revealed_at'),
+    serverSeed: text('server_seed').notNull(),
+    serverSeedHash: text('server_seed_hash').notNull(),
+    status: text('status').notNull(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+  },
+  (table) => [
+    check(
+      'case_fairness_seed_status_check',
+      sql`${table.status} in ('active', 'revealed')`,
+    ),
+    index('case_fairness_seed_user_status_idx').on(table.userId, table.status),
+    uniqueIndex('case_fairness_seed_user_active_idx')
+      .on(table.userId)
+      .where(sql`${table.status} = 'active'`),
+  ],
+)
+
+export const caseOpen = pgTable(
+  'case_open',
+  {
+    amount: bigint('amount', { mode: 'bigint' }).notNull(),
+    clientSeed: text('client_seed').notNull(),
+    crateId: text('crate_id')
+      .notNull()
+      .references(() => crate.id),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    currency: text('currency')
+      .notNull()
+      .references(() => currency.code),
+    id: text('id').primaryKey(),
+    idempotencyKey: text('idempotency_key').notNull(),
+    nonce: integer('nonce').notNull(),
+    payout: bigint('payout', { mode: 'bigint' }).notNull(),
+    requestHash: text('request_hash').notNull(),
+    result: jsonb('result').$type<CaseOpenResult>().notNull(),
+    revisionId: text('revision_id')
+      .notNull()
+      .references(() => crateRevision.id),
+    seedId: text('seed_id')
+      .notNull()
+      .references(() => caseFairnessSeed.id),
+    status: text('status').notNull(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    walletId: text('wallet_id')
+      .notNull()
+      .references(() => wallet.id, { onDelete: 'cascade' }),
+  },
+  (table) => [
+    check('case_open_status_check', sql`${table.status} = 'settled'`),
+    check('case_open_amount_check', sql`${table.amount} > 0`),
+    check('case_open_payout_check', sql`${table.payout} >= 0`),
+    uniqueIndex('case_open_user_idempotency_idx').on(
+      table.userId,
+      table.idempotencyKey,
+    ),
+    index('case_open_user_created_id_idx').on(
+      table.userId,
+      table.createdAt,
+      table.id,
+    ),
+    index('case_open_crate_created_idx').on(table.crateId, table.createdAt),
+    index('case_open_wallet_id_idx').on(table.walletId),
+    index('case_open_currency_idx').on(table.currency),
+    index('case_open_revision_id_idx').on(table.revisionId),
+    index('case_open_seed_id_idx').on(table.seedId),
+  ],
+)
+
+export const crateRelations = relations(crate, ({ many, one }) => ({
   currentRevision: one(crateRevision, {
     fields: [crate.currentRevisionId],
     references: [crateRevision.id],
   }),
+  opens: many(caseOpen),
 }))
 
 export const cratePriceRelations = relations(cratePrice, ({ one }) => ({
@@ -115,5 +207,39 @@ export const crateRevisionRelations = relations(crateRevision, ({ one }) => ({
     fields: [crateRevision.crateId],
     references: [crate.id],
     relationName: 'crate_revisions',
+  }),
+}))
+
+export const caseFairnessSeedRelations = relations(
+  caseFairnessSeed,
+  ({ many, one }) => ({
+    opens: many(caseOpen),
+    user: one(user, {
+      fields: [caseFairnessSeed.userId],
+      references: [user.id],
+    }),
+  }),
+)
+
+export const caseOpenRelations = relations(caseOpen, ({ one }) => ({
+  crate: one(crate, {
+    fields: [caseOpen.crateId],
+    references: [crate.id],
+  }),
+  revision: one(crateRevision, {
+    fields: [caseOpen.revisionId],
+    references: [crateRevision.id],
+  }),
+  seed: one(caseFairnessSeed, {
+    fields: [caseOpen.seedId],
+    references: [caseFairnessSeed.id],
+  }),
+  user: one(user, {
+    fields: [caseOpen.userId],
+    references: [user.id],
+  }),
+  wallet: one(wallet, {
+    fields: [caseOpen.walletId],
+    references: [wallet.id],
   }),
 }))

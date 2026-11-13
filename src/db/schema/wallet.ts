@@ -20,13 +20,11 @@ export const currency = pgTable(
     bettingEnabled: boolean('betting_enabled').default(false).notNull(),
     code: text('code').primaryKey(),
     decimals: integer('decimals').notNull(),
-    depositEnabled: boolean('deposit_enabled').default(false).notNull(),
     enabled: boolean('enabled').default(false).notNull(),
     locale: text('locale').notNull(),
     symbol: text('symbol').notNull(),
     type: text('type').notNull(),
     walletEnabled: boolean('wallet_enabled').default(true).notNull(),
-    withdrawalEnabled: boolean('withdrawal_enabled').default(false).notNull(),
   },
   (table) => [index('currency_enabled_idx').on(table.enabled)],
 )

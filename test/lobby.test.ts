@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 
 import { formatAmount } from '@/lib/money'
 import {
-  cover,
   games,
   gift,
   multiplier,
@@ -33,15 +32,6 @@ describe('lobby helpers', () => {
     ])
 
     expect(ranked.map((item) => item.id)).toStrictEqual(['b', 'a'])
-  })
-
-  it('picks game cover assets in display order', () => {
-    expect(
-      cover([
-        { locale: 'en', type: 'banner', url: 'banner' },
-        { locale: 'en', type: 'thumbnail', url: 'thumbnail' },
-      ]),
-    ).toBe('thumbnail')
   })
 
   it('formats multipliers and computes crate rtp', () => {

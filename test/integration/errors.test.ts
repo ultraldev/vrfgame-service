@@ -1,5 +1,5 @@
+import type { ZodTypeProvider } from '@fastify/type-provider-zod'
 import { build } from '@test/helper'
-import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 

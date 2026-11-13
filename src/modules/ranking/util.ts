@@ -1,5 +1,6 @@
 const BPS_DENOMINATOR = 10_000n
 
+export const RANKING_CURRENCIES = ['USD', 'USDT'] as const
 export const RANKING_CURRENCY = 'USD'
 export const RANKING_PERIOD_TYPES = ['daily', 'weekly', 'monthly'] as const
 export type RankingPeriod = (typeof RANKING_PERIOD_TYPES)[number]
@@ -82,4 +83,40 @@ export function computePool(totalWagered: bigint, config: RankingPeriodConfig) {
 
 export function computeRewardAmount(poolAmount: bigint, percentageBps: number) {
   return (poolAmount * BigInt(percentageBps)) / BPS_DENOMINATOR
+}
+
+export function settlementDueAt(
+  type: RankingPeriod,
+  startKey: string,
+  freezeDelayMinutes: number,
+) {
+  const { to } = periodRange(type, startKey)
+  return new Date(to.getTime() + freezeDelayMinutes * 60_000)
+}
+
+export function isSettlementDue(
+  type: RankingPeriod,
+  startKey: string,
+  freezeDelayMinutes: number,
+  now = new Date(),
+) {
+  return settlementDueAt(type, startKey, freezeDelayMinutes) <= now
+}
+
+export function normalizeRankingAmount(
+  amount: bigint,
+  fromDecimals: number,
+  toDecimals = 2,
+) {
+  if (fromDecimals === toDecimals) {
+    return amount
+  }
+  return fromDecimals < toDecimals
+    ? amount * 10n ** BigInt(toDecimals - fromDecimals)
+    : amount / 10n ** BigInt(fromDecimals - toDecimals)
+}
+
+export function nextPeriodStart(type: RankingPeriod, startKey: string) {
+  const { to } = periodRange(type, startKey)
+  return periodStart(type, to)
 }

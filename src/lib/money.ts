@@ -18,3 +18,23 @@ export function formatAmount(amount: bigint, decimals: number) {
 
   return negative ? `-${formatted}` : formatted
 }
+
+export function parseAmount(value: string, decimals: number) {
+  const match = /^(?<whole>\d+)(?:\.(?<fraction>\d+))?$/u.exec(value.trim())
+  const whole = match?.groups?.whole
+  if (!whole) {
+    throw Object.assign(new Error('Invalid amount'), { statusCode: 400 })
+  }
+
+  const fraction = match.groups?.fraction ?? ''
+  if (fraction.length > decimals) {
+    throw Object.assign(
+      new Error(`Amount supports at most ${decimals} decimal places`),
+      { statusCode: 400 },
+    )
+  }
+
+  const factor = 10n ** BigInt(decimals)
+  const fractionAmount = fraction ? BigInt(fraction.padEnd(decimals, '0')) : 0n
+  return BigInt(whole) * factor + fractionAmount
+}

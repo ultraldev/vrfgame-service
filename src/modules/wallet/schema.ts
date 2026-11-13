@@ -75,3 +75,19 @@ z.globalRegistry.add(List, { id: 'WalletBalances' })
 z.globalRegistry.add(Reference, { id: 'WalletTransactionReference' })
 z.globalRegistry.add(Transaction, { id: 'WalletTransaction' })
 z.globalRegistry.add(Transactions, { id: 'WalletTransactions' })
+
+export const WageringQuery = z.object({
+  currency: z.string().trim().min(1).max(16),
+})
+
+export const Wagering = z.object({
+  balance: z.string(),
+  capAmount: z.string().nullable(),
+  currency: z.string(),
+  occupiedAmount: z.string(),
+  ratio: z.number().int().nonnegative(),
+  wageringAmount: z.string(),
+  withdrawableAmount: z.string(),
+})
+
+z.globalRegistry.add(Wagering, { id: 'WalletWagering' })

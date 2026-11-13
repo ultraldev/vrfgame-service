@@ -1,16 +1,26 @@
+import type { ZodTypeProvider } from '@fastify/type-provider-zod'
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify'
-import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 
 import { API_PREFIX } from '@/lib/api'
 import { Failure } from '@/lib/schemas'
+import { getWageringSummary } from '@/modules/risk/wagering'
 import { balance, balances, transactions } from '@/modules/wallet/service'
 
-import { Item, List, Query, Transactions, TransactionsQuery } from './schema'
+import {
+  Item,
+  List,
+  Query,
+  Transactions,
+  TransactionsQuery,
+  Wagering,
+  WageringQuery,
+} from './schema'
 
 const PREFIX = `${API_PREFIX}/wallet`
 const failures = {
   400: Failure,
   401: Failure,
+  403: Failure,
   409: Failure,
   500: Failure,
   503: Failure,
@@ -50,6 +60,24 @@ function routes(
       response: { 200: List, ...failures },
     },
     url: `${PREFIX}/balances`,
+  })
+
+  app.route({
+    handler: (request) => {
+      const { user } = fastify.auth.session(request)
+      return getWageringSummary(fastify.db, user.id, request.query.currency, {
+        ratio: fastify.config.WITHDRAW_WAGERING_RATIO,
+        reportingCurrency: fastify.config.WITHDRAW_WAGERING_REPORTING_CURRENCY,
+      })
+    },
+    method: 'GET',
+    preHandler: fastify.auth.required,
+    schema: {
+      operationId: 'getWalletWagering',
+      querystring: WageringQuery,
+      response: { 200: Wagering, ...failures },
+    },
+    url: `${PREFIX}/wagering`,
   })
 
   app.route({

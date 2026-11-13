@@ -1,10 +1,10 @@
 import swagger from '@fastify/swagger'
-import type { FastifyInstance } from 'fastify'
-import fp from 'fastify-plugin'
 import {
   jsonSchemaTransform,
   jsonSchemaTransformObject,
-} from 'fastify-type-provider-zod'
+} from '@fastify/type-provider-zod'
+import type { FastifyInstance } from 'fastify'
+import fp from 'fastify-plugin'
 
 function openapi(
   fastify: FastifyInstance,
